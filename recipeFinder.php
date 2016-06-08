@@ -1,4 +1,6 @@
+#!/usr/bin/env php
 <?php
+
 require_once("recipeFinderFuns.php");
 global $argc, $argv;
 if ($argc != 3) {
