@@ -10,26 +10,26 @@ class recipeFinder extends TestCase
     }
 
     public function testProcessItemsWrongFormat() {
-        $itemsFileName = 'wrong_format.txt';
+        $itemsFileName = 'tests/wrong_format.txt';
         $this->assertFalse(processItems($itemsFileName));
         $this->expectOutputString("$itemsFileName: wrong file format\n");
     }
 
     public function testProcessItemsEmpty() {
-        $itemsFileName = 'empty.txt';
+        $itemsFileName = 'tests/empty.txt';
         $this->assertFalse(processItems($itemsFileName));
         $this->expectOutputString("$itemsFileName is empty\n");
     }
     
     public function testProcessItemsResult() {
         date_default_timezone_set('Australia/Sydney');
-        $itemsFileName = 'fridge.csv';
+        $itemsFileName = 'tests/fridge.csv';
         $expected = [
-            ["bread","10","slices","25-7-2016"],
-            ["cheese","10","slices","25-7-2016"],
-            ["butter","250","grams","25-7-2016"],
-            ["peanut butter","250","grams","4-6-2016"],
-            ["mixed salad","500","grams","1-1-2016"]
+            ["item" => "bread", "amount" => "10", "unit" => "slices", "useby" => "25-7-2016"],
+            ["item" => "cheese", "amount" => "10", "unit" => "slices", "useby" => "25-7-2016"],
+            ["item" => "butter", "amount" => "250", "unit" => "grams", "useby" => "25-7-2016"],
+            ["item" => "peanut butter", "amount" => "250", "unit" => "grams", "useby" => "4-6-2016"],
+            ["item" => "mixed salad", "amount" => "500", "unit" => "grams", "useby" => "1-1-2016"]
         ];
         $this->assertEquals($expected, processItems($itemsFileName));
         return $expected;
@@ -43,19 +43,19 @@ class recipeFinder extends TestCase
     }
 
     public function testProcessRecipesWrongFormat() {
-        $recipesFileName = 'wrong_format.txt';
+        $recipesFileName = 'tests/wrong_format.txt';
         $this->assertFalse(processRecipes($recipesFileName));
         $this->expectOutputString("$recipesFileName: wrong file format\n");
     }
 
     public function testProcessRecipesEmpty() {
-        $recipesFileName = 'empty.txt';
+        $recipesFileName = 'tests/empty.txt';
         $this->assertFalse(processRecipes($recipesFileName));
         $this->expectOutputString("$recipesFileName is empty\n");
     }
 
     public function testProcessRecipesResult() {
-        $recipesFileName = 'recipes.json';
+        $recipesFileName = 'tests/recipes.json';
         $recipesStr = file_get_contents($recipesFileName);
         $recipes = json_decode($recipesStr, true);
         $this->assertEquals($recipes, processRecipes($recipesFileName));
@@ -75,7 +75,7 @@ class recipeFinder extends TestCase
      * @depends testProcessItemsResult
      * @depends testProcessRecipesResult
      */
-    public function testFindRecipes($items, $recipes) {
+    public function testFindAllRecipes($items, $recipes) {
         $expected = [[
             "name" => "grilled cheese on toast",
             "ingredients" => [[
@@ -92,33 +92,27 @@ class recipeFinder extends TestCase
                 "useby" => "25-7-2016"
             ]]
         ]];
-        $this->assertEquals($expected, findRecipes($items, $recipes));
+        $this->assertEquals($expected, findAllRecipes($items, $recipes));
         return $expected;
     }
 
     /**
-     * @depends testFindRecipes
+     * @depends testFindAllRecipes
      */
-    public function testPrintResult($existRecipes) {
-        printResult($existRecipes);
-        $this->expectOutputString("grilled cheese on toast\n");
+    public function testFindRecipe($existRecipes) {
+        $this->assertEquals("grilled cheese on toast", findRecipe($existRecipes));
     }
 
-    private function excuteAll($itemsFileName, $recipesFileName) {
-        date_default_timezone_set('Australia/Sydney');
-        $items = processItems($itemsFileName);
-        $recipes = processRecipes($recipesFileName);
-        $existRecipes = findRecipes($items, $recipes);
-        printResult($existRecipes);
-    }
-    public function testFinalResult1() {
-        $this->excuteAll("fridge1.csv", "recipes.json");
-        $this->expectOutputString("salad sandwich\n");
+    public function testGetRecipe1() {
+        $this->assertEquals("salad sandwich", getRecipe("tests/fridge1.csv", "tests/recipes.json"));
     }
 
-    public function testFinalResult2() {
-        $this->excuteAll("fridge2.csv", "recipes.json");
-        $this->expectOutputString("Order Takeout\n");
+    public function testGetRecipe2() {
+        $this->assertEquals("Order Takeout", getRecipe("tests/fridge2.csv", "tests/recipes.json"));
+    }
+
+    public function testGetRecipe3() {
+        $this->assertEquals("grilled cheese on toast", getRecipe("tests/fridge3.csv", "tests/recipes.json"));
     }
 }
 ?>
